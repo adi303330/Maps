@@ -36,6 +36,47 @@ export default function ReportIssue() {
   // Coordinates (default close to SF Center)
   const [locationName, setLocationName] = useState("800 Valencia St, San Francisco, CA 94110");
   const [coords, setCoords] = useState({ lat: 37.7608, lng: -122.4211 });
+  const [isLocating, setIsLocating] = useState(false);
+
+  const handleUseMyLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setCoords({ lat, lng });
+
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.display_name) {
+              setLocationName(data.display_name);
+            } else {
+              setLocationName(`GPS Coordinates: ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+            }
+          } else {
+            setLocationName(`GPS Coordinates: ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+          }
+        } catch (err) {
+          console.error("Reverse geocoding failed", err);
+          setLocationName(`GPS Coordinates: ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (error) => {
+        console.error("Geolocation error", error);
+        alert(`Failed to retrieve location: ${error.message}`);
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  };
 
   // Form State (for editing)
   const [editedType, setEditedType] = useState("");
@@ -261,7 +302,24 @@ export default function ReportIssue() {
                   
                   <div className="space-y-3">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-muted-foreground uppercase">Address</label>
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase">Address</label>
+                        <button
+                          type="button"
+                          onClick={handleUseMyLocation}
+                          disabled={isLocating}
+                          className="text-[9px] font-bold text-primary hover:underline flex items-center gap-1 disabled:opacity-50"
+                        >
+                          {isLocating ? (
+                            <>
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              <span>Locating...</span>
+                            </>
+                          ) : (
+                            <span>Use Live Location</span>
+                          )}
+                        </button>
+                      </div>
                       <input 
                         type="text" 
                         value={locationName}

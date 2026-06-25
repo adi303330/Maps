@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
+import React, { useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, Circle, useMap } from "react-leaflet";
 import L from "leaflet";
 import { Report, MAP_CENTER } from "@/services/db";
 
@@ -25,6 +25,8 @@ export default function MapComponentInternal({
   onReportSelect,
   selectedReport
 }: MapInternalProps) {
+  const [showHeatmap, setShowHeatmap] = useState(false);
+
   // Create beautiful custom marker icons using Tailwind classes
   const createCustomIcon = (report: Report) => {
     let colorClass = "bg-amber-500 ring-amber-300"; // Default Warning (Yellow)
@@ -112,41 +114,77 @@ export default function MapComponentInternal({
           </div>
         </div>
 
-        {reports.map((report) => (
-          <Marker
-            key={report.id}
-            position={[report.latitude, report.longitude]}
-            icon={createCustomIcon(report)}
-            eventHandlers={{
-              click: () => {
-                if (onReportSelect) onReportSelect(report);
-              }
-            }}
-          />
-        ))}
+        {showHeatmap ? (
+          reports.map((report) => {
+            let color = "#F59E0B";
+            if (report.status === "Resolved") {
+              color = "#10B981";
+            } else if (report.severity >= 8) {
+              color = "#EF4444";
+            } else if (report.severity >= 5) {
+              color = "#F97316";
+            }
+            return (
+              <Circle
+                key={`heat-${report.id}`}
+                center={[report.latitude, report.longitude]}
+                radius={600}
+                pathOptions={{
+                  color: color,
+                  fillColor: color,
+                  fillOpacity: 0.35,
+                  stroke: false
+                }}
+              />
+            );
+          })
+        ) : (
+          reports.map((report) => (
+            <Marker
+              key={report.id}
+              position={[report.latitude, report.longitude]}
+              icon={createCustomIcon(report)}
+              eventHandlers={{
+                click: () => {
+                  if (onReportSelect) onReportSelect(report);
+                }
+              }}
+            />
+          ))
+        )}
       </MapContainer>
 
       {/* Map Legend Overlay */}
-      <div className="absolute top-4 left-4 bg-card/95 backdrop-blur-sm border border-border rounded-lg p-3.5 shadow-sm text-card-foreground z-[1000] max-w-xs">
-        <h4 className="text-xs font-bold text-foreground mb-2">Severity & Status</h4>
-        <div className="space-y-1.5 text-xs font-medium text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-emerald-500 border border-white shadow-sm"></span>
-            <span>Resolved</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-amber-500 border border-white shadow-sm"></span>
-            <span>Moderate (Severity 1-4)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-orange-500 border border-white shadow-sm"></span>
-            <span>High Priority (Severity 5-7)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-red-500 border border-white shadow-sm animate-pulse"></span>
-            <span>Critical (Severity 8-10)</span>
+      <div className="absolute top-4 left-4 bg-card/95 backdrop-blur-sm border border-border rounded-xl p-4 shadow-md text-card-foreground z-[1000] max-w-xs space-y-3.5">
+        <div>
+          <h4 className="text-xs font-bold text-foreground mb-2">Severity & Status</h4>
+          <div className="space-y-1.5 text-xs font-medium text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-emerald-500 border border-white shadow-sm"></span>
+              <span>Resolved</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-amber-500 border border-white shadow-sm"></span>
+              <span>Moderate (Severity 1-4)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-orange-500 border border-white shadow-sm"></span>
+              <span>High Priority (Severity 5-7)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-red-500 border border-white shadow-sm animate-pulse"></span>
+              <span>Critical (Severity 8-10)</span>
+            </div>
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setShowHeatmap(!showHeatmap)}
+          className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary/95 text-primary-foreground text-[10px] font-bold rounded-lg transition-colors cursor-pointer shadow-sm"
+        >
+          <span>{showHeatmap ? "Show Standard Pins" : "Toggle Heatmap Layer"}</span>
+        </button>
       </div>
     </div>
   );

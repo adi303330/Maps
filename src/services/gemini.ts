@@ -120,7 +120,10 @@ async function fileToGenerativePart(file: File): Promise<{ inlineData: { data: s
 
 export const gemini = {
   async analyzeIssue(imageFile: File): Promise<AIAnalysisResult> {
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY?.replace(/['"]/g, "").trim();
+    let apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY?.replace(/['"]/g, "").trim();
+    if (apiKey && apiKey.includes("=")) {
+      apiKey = apiKey.split("=").pop()?.trim();
+    }
 
     if (apiKey) {
       try {
@@ -229,7 +232,10 @@ export const gemini = {
   },
 
   async verifyResolution(beforeImageUrl: string, afterImageFile: File): Promise<VerificationResult> {
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY?.replace(/['"]/g, "").trim();
+    let apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY?.replace(/['"]/g, "").trim();
+    if (apiKey && apiKey.includes("=")) {
+      apiKey = apiKey.split("=").pop()?.trim();
+    }
 
     if (apiKey) {
       try {

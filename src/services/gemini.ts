@@ -120,6 +120,7 @@ async function fileToGenerativePart(file: File): Promise<{ inlineData: { data: s
 
 export const gemini = {
   async analyzeIssue(imageFile: File): Promise<AIAnalysisResult> {
+    // Sanitize and clean Google Gemini API keys (handling quotes, spaces, and Vercel dashboard copy errors)
     let apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY?.replace(/['"]/g, "").trim();
     if (apiKey && apiKey.includes("=")) {
       apiKey = apiKey.split("=").pop()?.trim();

@@ -88,6 +88,15 @@ const MOCK_TEMPLATE_ANALYSIS: Record<string, AIAnalysisResult> = {
     estimated_impact: "Impedes traffic flow at a major intersection and increases accident probability.",
     ai_summary: "Traffic signal head showing dark in all phases (Red/Yellow/Green). The rest of the intersection lights are flashing yellow.",
     complaint_draft: "TO: Traffic Operations Center\nSUBJECT: Traffic Signal Outage - Urgent\n\nDear Traffic Operations,\n\nPlease dispatch emergency technicians. The primary signal head is completely out. Vehicles are struggling to navigate the intersection safely. Requesting controller board replacement."
+  },
+  invalid: {
+    issue_type: "Invalid Image",
+    severity: 0,
+    priority: "Low",
+    department: "N/A",
+    estimated_impact: "None",
+    ai_summary: "No municipal infrastructure issue (such as road damage, water leaks, garbage accumulation, or lighting failures) was detected in this photo. Please upload a clear image of street or utility defects.",
+    complaint_draft: "No dispatch generated. Please upload a valid municipal issue image."
   }
 };
 
@@ -119,15 +128,26 @@ export const gemini = {
         const prompt = `
           You are CivicLens AI, a smart-city infrastructure intelligence model.
           Analyze this image of a municipal infrastructure issue and output a structured JSON report.
+
+          CRITICAL CLASSIFICATION FILTER: If the uploaded image DOES NOT contain any municipal infrastructure issue (for example, if it shows a person, a selfie, a portrait, a face, an animal, generic text, or an indoor setting with no street or public property failures), you MUST return the following exact values:
+          - "issue_type": "Invalid Image"
+          - "severity": 0
+          - "priority": "Low"
+          - "department": "N/A"
+          - "estimated_impact": "None"
+          - "ai_summary": "No municipal infrastructure issue (such as potholes, leaks, garbage dumps, or broken streetlights) was detected in this image. Please upload a clear photo of street, sanitation, or safety defects."
+          - "complaint_draft": "No dispatch generated. Please upload a valid municipal issue image."
+
+          Otherwise, analyze the infrastructure defect normally.
           The output must match this exact TypeScript interface:
           {
-            issue_type: string; // Must be one of: "Pothole", "Water Leakage", "Broken Pipe", "Garbage Dump", "Open Manhole", "Broken Street Light", "Damaged Public Property", "Traffic Signal Issue", "Other"
-            severity: number; // 1 (lowest) to 10 (highest/immediate life threat)
-            priority: "Low" | "Medium" | "High" | "Critical"; // Mapping: 1-3 Low, 4-6 Medium, 7-8 High, 9-10 Critical
-            department: string; // The municipal authority responsible. One of: "Public Works Department", "Water & Sanitation Department", "Waste Management Department", "Traffic Operations Department"
-            estimated_impact: string; // Brief impact summary e.g. "Affects approximately 500 commuters daily."
-            ai_summary: string; // Detailed technical assessment of the problem (2-3 sentences)
-            complaint_draft: string; // Formally written dispatch ready to send to the municipal department. Include a greeting, details, and action requested.
+            issue_type: string; // Must be one of: "Pothole", "Water Leakage", "Broken Pipe", "Garbage Dump", "Open Manhole", "Broken Street Light", "Damaged Public Property", "Traffic Signal Issue", "Invalid Image"
+            severity: number; // 0 (invalid) or 1 to 10
+            priority: "Low" | "Medium" | "High" | "Critical"; 
+            department: string; 
+            estimated_impact: string; 
+            ai_summary: string; 
+            complaint_draft: string; 
           }
 
           Ensure the JSON is strictly formatted and valid. Respond ONLY with the JSON block. Do not include markdown code block syntax.
@@ -178,7 +198,11 @@ export const gemini = {
         const name = imageFile.name.toLowerCase();
         let selectedKey = "pothole"; // Default
 
-        if (name.includes("water") || name.includes("leak") || name.includes("pipe") || name.includes("burst")) {
+        const isPeopleOrSelfie = name.includes("girl") || name.includes("boy") || name.includes("selfie") || name.includes("person") || name.includes("man") || name.includes("woman") || name.includes("human") || name.includes("face") || name.includes("avatar") || name.includes("photo") || name.includes("pic") || name.includes("image") || name.includes("self");
+
+        if (isPeopleOrSelfie && !name.includes("pothole") && !name.includes("water") && !name.includes("leak") && !name.includes("pipe") && !name.includes("garbage") && !name.includes("trash") && !name.includes("light")) {
+          selectedKey = "invalid";
+        } else if (name.includes("water") || name.includes("leak") || name.includes("pipe") || name.includes("burst")) {
           selectedKey = name.includes("pipe") ? "pipe" : "water";
         } else if (name.includes("trash") || name.includes("garbage") || name.includes("dump") || name.includes("litter")) {
           selectedKey = "garbage";
@@ -192,11 +216,10 @@ export const gemini = {
           selectedKey = "property";
         } else {
           // Select a random template if no keyword matches
-          const keys = Object.keys(MOCK_TEMPLATE_ANALYSIS);
+          const keys = Object.keys(MOCK_TEMPLATE_ANALYSIS).filter(k => k !== "invalid");
           selectedKey = keys[Math.floor(Math.random() * keys.length)];
         }
 
-        // Add a slight variance to mock data so it doesn't look static
         const template = MOCK_TEMPLATE_ANALYSIS[selectedKey] || MOCK_TEMPLATE_ANALYSIS.pothole;
         resolve({
           ...template

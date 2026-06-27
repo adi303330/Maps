@@ -346,7 +346,6 @@ export default function ReportIssue() {
                       </div>
                       <div>
                         <h2 className="text-xs font-bold text-foreground uppercase tracking-wider leading-none">AI Diagnostics Analysis</h2>
-                        <span className="text-[9px] text-muted-foreground font-medium">Telemetry parsed successfully</span>
                       </div>
                     </div>
                     
@@ -367,9 +366,22 @@ export default function ReportIssue() {
                       >
                         <Check className="h-3 w-3" />
                         <span>Save Edits</span>
-                      </button>
-                    )}
+                    </button>
+                  )}
+                </div>
+
+                {editedType === "Invalid Image" && (
+                  <div className="mx-6 mt-6 p-4 rounded-xl border border-red-200 bg-red-50 text-red-800 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/30 flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <strong className="text-xs font-bold block">Invalid/Non-Infrastructure Photo Detected</strong>
+                      <p className="text-xs font-medium leading-relaxed">
+                        CivicLens AI analyzed this photo and determined it does not show a valid municipal infrastructure defect (like road damage, leaks, dumps, or broken lighting). 
+                        <span className="block mt-1 font-black">Submission is disabled. Please upload a clear photo of city street, sanitation, or safety defects.</span>
+                      </p>
+                    </div>
                   </div>
+                )}
 
                   {/* Diagnostic fields */}
                   <div className="p-6 space-y-5">
@@ -395,6 +407,7 @@ export default function ReportIssue() {
                             <option value="Damaged Public Property">Damaged Public Property</option>
                             <option value="Traffic Signal Issue">Traffic Signal Issue</option>
                             <option value="Other">Other</option>
+                            <option value="Invalid Image">Invalid Image</option>
                           </select>
                         )}
                       </div>
@@ -537,7 +550,12 @@ export default function ReportIssue() {
                     </button>
                     <button 
                       type="submit"
-                      className="text-xs font-bold bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/95 transition-all shadow-sm flex items-center gap-1.5"
+                      disabled={editedType === "Invalid Image"}
+                      className={`text-xs font-bold px-4 py-2 rounded-lg transition-all shadow-sm flex items-center gap-1.5 ${
+                        editedType === "Invalid Image"
+                          ? "bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed border border-border"
+                          : "bg-primary text-primary-foreground hover:bg-primary/95"
+                      }`}
                     >
                       <Send className="h-3.5 w-3.5" />
                       <span>Submit Report</span>

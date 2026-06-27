@@ -27,8 +27,15 @@ export default function MapComponentInternal({
 }: MapInternalProps) {
   const [showHeatmap, setShowHeatmap] = useState(false);
 
-  // Create beautiful custom marker icons using Tailwind classes
-  const createCustomIcon = (report: Report) => {
+  // Cache icons to prevent recreation on zoom/pan layout cycles
+  const iconCache = React.useRef<Record<string, L.DivIcon>>({});
+
+  const getCustomIcon = (report: Report) => {
+    const key = `${report.id}-${report.status}-${report.severity}`;
+    if (iconCache.current[key]) {
+      return iconCache.current[key];
+    }
+
     let colorClass = "bg-amber-500 ring-amber-300"; // Default Warning (Yellow)
     let dotClass = "bg-amber-600";
     let pulseClass = "";
@@ -59,17 +66,22 @@ export default function MapComponentInternal({
       </div>
     `;
 
-    return L.divIcon({
+    const icon = L.divIcon({
       html,
       className: "custom-leaflet-icon",
       iconSize: [32, 32],
       iconAnchor: [16, 16]
     });
+
+    iconCache.current[key] = icon;
+    return icon;
   };
 
   const center: [number, number] = selectedReport
     ? [selectedReport.latitude, selectedReport.longitude]
-    : MAP_CENTER;
+    : reports.length > 0
+      ? [reports[0].latitude, reports[0].longitude]
+      : MAP_CENTER;
 
   const zoom = selectedReport ? 15 : 13;
 
@@ -143,7 +155,7 @@ export default function MapComponentInternal({
             <Marker
               key={report.id}
               position={[report.latitude, report.longitude]}
-              icon={createCustomIcon(report)}
+              icon={getCustomIcon(report)}
               eventHandlers={{
                 click: () => {
                   if (onReportSelect) onReportSelect(report);

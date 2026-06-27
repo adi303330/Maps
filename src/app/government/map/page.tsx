@@ -17,10 +17,11 @@ import {
   Clock, 
   ExternalLink,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  CheckCircle2
 } from "lucide-react";
 
-function CityMapContent() {
+function GovMapContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -28,7 +29,7 @@ function CityMapContent() {
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
-  const [userCommentAuthor, setUserCommentAuthor] = useState("Jane Doe (Citizen)");
+  const [userCommentAuthor, setUserCommentAuthor] = useState("Gov Control (Admin)");
 
   useEffect(() => {
     // Load all reports
@@ -55,13 +56,32 @@ function CityMapContent() {
 
   const handleReportSelect = (report: Report) => {
     setSelectedReport(report);
-    // Sync query string
-    router.replace(`/citizen/map?id=${report.id}`);
+    // Sync query string pointing to government map
+    router.replace(`/government/map?id=${report.id}`);
   };
 
   const handleCloseDrawer = () => {
     setSelectedReport(null);
-    router.replace("/citizen/map");
+    router.replace("/government/map");
+  };
+
+  const handleStatusChange = (id: string, nextStatus: Report["status"]) => {
+    db.updateReportStatus(id, nextStatus);
+    const updated = db.getReports();
+    setReports(updated);
+    if (selectedReport && selectedReport.id === id) {
+      setSelectedReport({ ...selectedReport, status: nextStatus });
+    }
+  };
+
+  const handleQuickResolve = (id: string) => {
+    db.updateReportStatus(id, "Resolved");
+    const updated = db.getReports();
+    setReports(updated);
+    if (selectedReport && selectedReport.id === id) {
+      setSelectedReport({ ...selectedReport, status: "Resolved" });
+    }
+    alert("Issue marked as Resolved in public register.");
   };
 
   const handleUpvote = () => {
@@ -71,7 +91,6 @@ function CityMapContent() {
       ...selectedReport,
       votes: updatedVotes
     });
-    // Refresh global list
     setReports(db.getReports());
   };
 
@@ -79,11 +98,11 @@ function CityMapContent() {
     e.preventDefault();
     if (!selectedReport || !newComment.trim()) return;
 
+    // Post as Official Response
     const added = db.addComment(selectedReport.id, userCommentAuthor, newComment);
     setComments([...comments, added]);
     setNewComment("");
 
-    // Update comment counts on selected report and reports list
     setSelectedReport({
       ...selectedReport,
       comments_count: selectedReport.comments_count + 1
@@ -119,7 +138,7 @@ function CityMapContent() {
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 overflow-hidden font-sans">
-      <Sidebar mode="citizen" />
+      <Sidebar mode="government" />
 
       {/* Screen container */}
       <main className="flex-1 flex overflow-hidden relative pt-14 pb-16 md:pt-0 md:pb-0">
@@ -142,7 +161,7 @@ function CityMapContent() {
             <>
               {/* Drawer Header */}
               <div className="h-14 border-b border-border px-5 flex items-center justify-between flex-shrink-0 bg-slate-50 dark:bg-slate-800/20">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Report Specifications</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Government Operations Drawer</span>
                 <button 
                   onClick={handleCloseDrawer}
                   className="p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
@@ -159,7 +178,43 @@ function CityMapContent() {
                     src={selectedReport.image_url} 
                     alt={selectedReport.title}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800";
+                    }}
                   />
+                </div>
+
+                {/* Government Command Tools */}
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-3">
+                  <h4 className="text-[10px] font-black text-primary uppercase tracking-wider flex items-center gap-1">
+                    <Building className="h-3.5 w-3.5" />
+                    <span>Operations Command</span>
+                  </h4>
+                  <div className="flex gap-2">
+                    <select 
+                      value={selectedReport.status}
+                      onChange={(e) => handleStatusChange(selectedReport.id, e.target.value as any)}
+                      className="text-xs font-bold bg-card border border-border rounded-lg px-2.5 py-1.5 flex-1 focus:outline-none focus:ring-1 focus:ring-primary"
+                    >
+                      <option value="Submitted">Submitted</option>
+                      <option value="Assigned">Assigned</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Resolved">Resolved</option>
+                    </select>
+
+                    {selectedReport.status !== "Resolved" && (
+                      <button
+                        onClick={() => handleQuickResolve(selectedReport.id)}
+                        className="text-xs font-bold bg-primary text-primary-foreground px-3 py-1.5 rounded-lg hover:bg-primary/95 transition-all shadow-sm flex items-center gap-1"
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        <span>Quick Resolve</span>
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[9px] text-muted-foreground font-semibold leading-normal">
+                    Updating the dispatch level instantly syncs the dashboard KPI matrices and notifies reporting citizens.
+                  </p>
                 </div>
 
                 {/* Title & Coordinates */}
@@ -241,11 +296,11 @@ function CityMapContent() {
                   )}
                 </div>
 
-                {/* AI Verification Box (If verified/resolved) */}
+                {/* AI Verification Box */}
                 {selectedReport.verification_status && (
                   <div className="bg-emerald-50/50 dark:bg-emerald-950/10 border border-emerald-200/60 dark:border-emerald-900/30 rounded-xl p-4 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-emerald-800 dark:text-emerald-400">AI Verification Verified</span>
+                      <span className="text-xs font-bold text-emerald-800 dark:text-emerald-400">AI Resolution Verified</span>
                       <span className="text-[10px] font-black bg-emerald-500 text-white px-2 py-0.5 rounded">
                         {selectedReport.verification_confidence}% Conf.
                       </span>
@@ -255,13 +310,25 @@ function CityMapContent() {
                         <div className="space-y-1">
                           <span className="text-[9px] font-bold text-slate-400 uppercase">Before</span>
                           <div className="aspect-video w-full rounded overflow-hidden border border-border">
-                            <img src={selectedReport.before_image || selectedReport.image_url} className="w-full h-full object-cover" />
+                            <img 
+                              src={selectedReport.before_image || selectedReport.image_url} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800";
+                              }}
+                            />
                           </div>
                         </div>
                         <div className="space-y-1">
                           <span className="text-[9px] font-bold text-slate-400 uppercase">After Repair</span>
                           <div className="aspect-video w-full rounded overflow-hidden border border-border">
-                            <img src={selectedReport.after_image} className="w-full h-full object-cover" />
+                            <img 
+                              src={selectedReport.after_image} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800";
+                              }}
+                            />
                           </div>
                         </div>
                       </div>
@@ -269,75 +336,57 @@ function CityMapContent() {
                   </div>
                 )}
 
-                {/* Community Section: Upvote, existence validation, comments list */}
+                {/* Discussion feed comments section */}
                 <div className="border-t border-border pt-5 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Community Validation</h4>
-                    <button
-                      onClick={handleUpvote}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-primary/20 hover:border-primary bg-primary/5 hover:bg-primary/10 text-primary text-xs font-bold transition-all shadow-sm"
-                    >
-                      <ArrowUp className="h-3.5 w-3.5" />
-                      <span>Upvote Importance ({selectedReport.votes})</span>
-                    </button>
-                  </div>
+                  <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    <span>Discussion Feed ({selectedReport.comments_count})</span>
+                  </h5>
 
-                  {/* Existence affirmation */}
-                  <div className="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-3.5 border border-border space-y-1 flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <span className="text-xs font-bold text-foreground">Confirm Existence</span>
-                      <p className="text-[10px] text-muted-foreground leading-none font-medium">Affirm this problem currently exists</p>
-                    </div>
-                    <button 
-                      onClick={() => alert("Thank you. Your confirmation has been logged for municipal tracking.")}
-                      className="px-3 py-1 bg-white dark:bg-card border border-border text-foreground hover:bg-secondary rounded text-[11px] font-bold shadow-sm"
-                    >
-                      Yes, Active
-                    </button>
-                  </div>
-
-                  {/* Comments section list */}
-                  <div className="space-y-3 pt-2">
-                    <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                      <MessageSquare className="h-3.5 w-3.5" />
-                      <span>Discussion feed ({selectedReport.comments_count})</span>
-                    </h5>
-
-                    {comments.length === 0 ? (
-                      <p className="text-xs text-muted-foreground font-medium italic py-2">No comments have been posted. Start the discussion below.</p>
-                    ) : (
-                      <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-                        {comments.map((c) => (
-                          <div key={c.id} className="bg-muted/50 rounded-lg p-3 border border-border/60 text-xs space-y-1">
-                            <div className="flex items-center justify-between font-bold text-slate-700 dark:text-slate-300">
+                  {comments.length === 0 ? (
+                    <p className="text-xs text-muted-foreground font-medium italic py-2">No updates recorded.</p>
+                  ) : (
+                    <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                      {comments.map((c) => (
+                        <div 
+                          key={c.id} 
+                          className={`rounded-lg p-3 border text-xs space-y-1 ${
+                            c.author.includes("Gov") 
+                              ? "bg-blue-50/50 dark:bg-blue-950/10 border-blue-200/50 dark:border-blue-900/30" 
+                              : "bg-muted/50 border-border/60"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between font-bold">
+                            <span className={c.author.includes("Gov") ? "text-primary flex items-center gap-1" : "text-slate-700 dark:text-slate-300"}>
+                              {c.author.includes("Gov") && <Building className="h-3 w-3" />}
                               <span>{c.author}</span>
-                              <span className="text-[9px] text-muted-foreground font-medium">
-                                {new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                            </div>
-                            <p className="text-slate-600 dark:text-slate-400 font-medium">{c.text}</p>
+                            </span>
+                            <span className="text-[9px] text-muted-foreground font-medium">
+                              {new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
                           </div>
-                        ))}
-                      </div>
-                    )}
+                          <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">{c.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-                    {/* Add Comment Form */}
-                    <form onSubmit={handleAddComment} className="flex gap-2 pt-1">
-                      <input 
-                        type="text" 
-                        placeholder="Add community update..."
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        className="flex-1 px-3 py-2 text-xs rounded-lg border border-border bg-card focus:outline-none focus:ring-1 focus:ring-primary font-medium"
-                      />
-                      <button 
-                        type="submit" 
-                        className="px-3 py-2 bg-primary text-primary-foreground text-xs font-bold rounded-lg hover:bg-primary/95 transition-all shadow-sm"
-                      >
-                        Send
-                      </button>
-                    </form>
-                  </div>
+                  {/* Add Official Response Form */}
+                  <form onSubmit={handleAddComment} className="flex gap-2 pt-1">
+                    <input 
+                      type="text" 
+                      placeholder="Add official government update..."
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      className="flex-1 px-3 py-2 text-xs rounded-lg border border-border bg-card focus:outline-none focus:ring-1 focus:ring-primary font-medium"
+                    />
+                    <button 
+                      type="submit" 
+                      className="px-4 py-2 bg-primary text-primary-foreground text-xs font-bold rounded-lg hover:bg-primary/95 transition-all shadow-sm"
+                    >
+                      Reply
+                    </button>
+                  </form>
                 </div>
               </div>
             </>
@@ -348,17 +397,17 @@ function CityMapContent() {
   );
 }
 
-export default function CityMapPage() {
+export default function GovMapPage() {
   return (
     <Suspense fallback={
       <div className="flex h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 items-center justify-center font-sans">
         <div className="flex flex-col items-center gap-2">
           <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-xs font-semibold text-muted-foreground">Loading Map Telemetry...</span>
+          <span className="text-xs font-semibold text-muted-foreground">Loading Command Map...</span>
         </div>
       </div>
     }>
-      <CityMapContent />
+      <GovMapContent />
     </Suspense>
   );
 }

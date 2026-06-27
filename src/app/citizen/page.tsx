@@ -53,9 +53,9 @@ export default function CitizenDashboard() {
       <Sidebar mode="citizen" />
 
       {/* Main content pane */}
-      <main className="flex-1 flex flex-col overflow-y-auto">
+      <main className="flex-1 flex flex-col overflow-y-auto pt-14 pb-16 md:pt-0 md:pb-0">
         {/* Header */}
-        <header className="h-16 border-b border-border bg-card flex items-center justify-between px-8 flex-shrink-0">
+        <header className="hidden md:flex h-16 border-b border-border bg-card items-center justify-between px-8 flex-shrink-0">
           <div>
             <h1 className="text-lg font-bold text-foreground">Citizen Dashboard</h1>
             <p className="text-xs text-muted-foreground font-medium">Overview of your municipal reports and contributions</p>
@@ -143,23 +143,26 @@ export default function CitizenDashboard() {
 
               <div className="space-y-4">
                 {reports.slice(0, 4).map((report) => (
-                  <div key={report.id} className="bg-card border border-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all flex gap-5">
+                  <div key={report.id} className="bg-card border border-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all flex flex-col sm:flex-row gap-4 sm:gap-5">
                     {/* Thumbnail */}
                     <div className="h-20 w-20 rounded-lg overflow-hidden bg-muted flex-shrink-0 border border-border">
                       <img 
                         src={report.image_url} 
                         alt={report.title} 
                         className="h-full w-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800";
+                        }}
                       />
                     </div>
                     {/* Report Summary */}
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1 min-w-0 space-y-2">
                       <div className="flex flex-wrap items-start justify-between gap-2">
-                        <div>
-                          <h3 className="text-sm font-bold text-foreground hover:text-primary transition-colors">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-sm font-bold text-foreground hover:text-primary transition-colors break-words">
                             <Link href={`/citizen/map?id=${report.id}`}>{report.title}</Link>
                           </h3>
-                          <p className="text-xs text-muted-foreground font-semibold flex items-center gap-1 mt-0.5">
+                          <p className="text-xs text-muted-foreground font-semibold flex items-center gap-1 mt-0.5 truncate">
                             <MapPin className="h-3.5 w-3.5 text-primary" />
                             <span>{report.location_name}</span>
                           </p>

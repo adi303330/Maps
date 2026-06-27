@@ -49,8 +49,8 @@ export default function MyReportsPage() {
       <Sidebar mode="citizen" />
 
       {/* Main pane */}
-      <main className="flex-1 flex flex-col overflow-y-auto">
-        <header className="h-16 border-b border-border bg-card flex items-center justify-between px-8 flex-shrink-0">
+      <main className="flex-1 flex flex-col overflow-y-auto pt-14 pb-16 md:pt-0 md:pb-0">
+        <header className="hidden md:flex h-16 border-b border-border bg-card items-center justify-between px-8 flex-shrink-0">
           <div>
             <h1 className="text-lg font-bold text-foreground">My Reported Issues</h1>
             <p className="text-xs text-muted-foreground font-medium">History of your infrastructure reports and validation logs</p>
@@ -84,7 +84,14 @@ export default function MyReportsPage() {
                   <div key={report.id} className="p-6 hover:bg-slate-50/40 dark:hover:bg-slate-800/5 transition-colors flex flex-col sm:flex-row gap-5 items-start sm:items-center">
                     {/* Visual Photo */}
                     <div className="h-16 w-16 rounded-lg bg-slate-100 border border-border overflow-hidden flex-shrink-0">
-                      <img src={report.image_url} alt={report.title} className="h-full w-full object-cover" />
+                      <img 
+                        src={report.image_url} 
+                        alt={report.title} 
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800";
+                        }}
+                      />
                     </div>
 
                     {/* Details Info */}

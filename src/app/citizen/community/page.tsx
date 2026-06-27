@@ -85,8 +85,8 @@ export default function CommunityPage() {
       <Sidebar mode="citizen" />
 
       {/* Content area */}
-      <main className="flex-1 flex flex-col overflow-y-auto">
-        <header className="h-16 border-b border-border bg-card flex items-center justify-between px-8 flex-shrink-0">
+      <main className="flex-1 flex flex-col overflow-y-auto pt-14 pb-16 md:pt-0 md:pb-0">
+        <header className="hidden md:flex h-16 border-b border-border bg-card items-center justify-between px-8 flex-shrink-0">
           <div>
             <h1 className="text-lg font-bold text-foreground">Community Validation Board</h1>
             <p className="text-xs text-muted-foreground font-medium">Verify reports, review public comments, and upvote local repairs</p>
@@ -111,7 +111,14 @@ export default function CommunityPage() {
               >
                 {/* Image and Severity Pill */}
                 <div className="aspect-video w-full bg-slate-100 dark:bg-slate-800 relative">
-                  <img src={report.image_url} alt={report.title} className="w-full h-full object-cover" />
+                  <img 
+                    src={report.image_url} 
+                    alt={report.title} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800";
+                    }}
+                  />
                   <div className="absolute top-3 left-3 flex gap-1.5 z-10">
                     <span className={`text-[10px] font-black px-2 py-0.5 rounded border border-white/20 shadow-sm ${getSeverityBadgeColor(report.severity)}`}>
                       Severity {report.severity}

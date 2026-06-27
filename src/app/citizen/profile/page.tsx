@@ -37,8 +37,8 @@ export default function ProfilePage() {
       <Sidebar mode="citizen" />
 
       {/* Main pane */}
-      <main className="flex-1 flex flex-col overflow-y-auto">
-        <header className="h-16 border-b border-border bg-card flex items-center justify-between px-8 flex-shrink-0">
+      <main className="flex-1 flex flex-col overflow-y-auto pt-14 pb-16 md:pt-0 md:pb-0">
+        <header className="hidden md:flex h-16 border-b border-border bg-card items-center justify-between px-8 flex-shrink-0">
           <div>
             <h1 className="text-lg font-bold text-foreground">User Profile & Settings</h1>
             <p className="text-xs text-muted-foreground font-medium">Manage your civic profile, notification bounds, and achievements</p>

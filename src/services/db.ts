@@ -37,7 +37,7 @@ const DEFAULT_REPORTS: Report[] = [
     id: "rep-1",
     title: "Major Pothole on Market Street Lane 2",
     issue_type: "Pothole",
-    image_url: "https://images.unsplash.com/photo-1515162305285-0293e4767cc2?w=800&auto=format&fit=crop&q=60",
+    image_url: "/images/major_pothole.png",
     latitude: 37.7833,
     longitude: -122.4088,
     severity: 8,
@@ -50,13 +50,13 @@ const DEFAULT_REPORTS: Report[] = [
     created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days ago
     votes: 42,
     comments_count: 5,
-    before_image: "https://images.unsplash.com/photo-1515162305285-0293e4767cc2?w=800&auto=format&fit=crop&q=60"
+    before_image: "/images/major_pothole.png"
   },
   {
     id: "rep-2",
     title: "Water Main Leakage with Minor Flooding",
     issue_type: "Water Leakage",
-    image_url: "https://images.unsplash.com/photo-1585338107529-13afc5f02586?w=800&auto=format&fit=crop&q=60",
+    image_url: "/images/water_leak.png",
     latitude: 37.7699,
     longitude: -122.4468,
     severity: 6,
@@ -69,13 +69,13 @@ const DEFAULT_REPORTS: Report[] = [
     created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
     votes: 18,
     comments_count: 2,
-    before_image: "https://images.unsplash.com/photo-1585338107529-13afc5f02586?w=800&auto=format&fit=crop&q=60"
+    before_image: "/images/water_leak.png"
   },
   {
     id: "rep-3",
     title: "Illegal Garbage Dumping behind Community Park",
     issue_type: "Garbage Dump",
-    image_url: "https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?w=800&auto=format&fit=crop&q=60",
+    image_url: "/images/garbage_overflow.png",
     latitude: 37.7599,
     longitude: -122.4148,
     severity: 7,
@@ -88,13 +88,13 @@ const DEFAULT_REPORTS: Report[] = [
     created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
     votes: 9,
     comments_count: 0,
-    before_image: "https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?w=800&auto=format&fit=crop&q=60"
+    before_image: "/images/garbage_overflow.png"
   },
   {
     id: "rep-4",
     title: "Damaged and Flickering Street Light Grid",
     issue_type: "Broken Street Light",
-    image_url: "https://images.unsplash.com/photo-1509024644558-2f56ce76c490?w=800&auto=format&fit=crop&q=60",
+    image_url: "/images/broken_street_light.png",
     latitude: 37.7715,
     longitude: -122.4205,
     severity: 4,
@@ -107,8 +107,8 @@ const DEFAULT_REPORTS: Report[] = [
     created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days ago
     votes: 28,
     comments_count: 4,
-    before_image: "https://images.unsplash.com/photo-1509024644558-2f56ce76c490?w=800&auto=format&fit=crop&q=60",
-    after_image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&auto=format&fit=crop&q=60",
+    before_image: "/images/broken_street_light.png",
+    after_image: "/images/repaired_light.png",
     verification_status: "Resolved",
     verification_confidence: 98
   },
@@ -116,7 +116,7 @@ const DEFAULT_REPORTS: Report[] = [
     id: "rep-5",
     title: "Cracked Main Pipeline surfacing in Parking Zone",
     issue_type: "Broken Pipe",
-    image_url: "https://images.unsplash.com/photo-1542013936693-8848e574047a?w=800&auto=format&fit=crop&q=60",
+    image_url: "/images/broken_pipeline.png",
     latitude: 37.7512,
     longitude: -122.4312,
     severity: 9,
@@ -129,8 +129,8 @@ const DEFAULT_REPORTS: Report[] = [
     created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(), // 15 days ago
     votes: 56,
     comments_count: 8,
-    before_image: "https://images.unsplash.com/photo-1542013936693-8848e574047a?w=800&auto=format&fit=crop&q=60",
-    after_image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&auto=format&fit=crop&q=60", // Repaired street
+    before_image: "/images/broken_pipeline.png",
+    after_image: "/images/repaired_pipeline.png",
     verification_status: "Resolved",
     verification_confidence: 95
   },
@@ -138,7 +138,7 @@ const DEFAULT_REPORTS: Report[] = [
     id: "rep-6",
     title: "Damaged Public Bus Shelter Glass Pane",
     issue_type: "Damaged Public Property",
-    image_url: "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=800&auto=format&fit=crop&q=60",
+    image_url: "/images/shattered_shelter.png",
     latitude: 37.7942,
     longitude: -122.4019,
     severity: 5,
@@ -151,7 +151,7 @@ const DEFAULT_REPORTS: Report[] = [
     created_at: new Date(Date.now() - 3 * 60 * 1000).toISOString(), // 3 minutes ago
     votes: 2,
     comments_count: 0,
-    before_image: "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=800&auto=format&fit=crop&q=60"
+    before_image: "/images/shattered_shelter.png"
   }
 ];
 
@@ -216,6 +216,13 @@ const setStoredData = <T>(key: string, value: T): void => {
 
 export const db = {
   getReports(): Report[] {
+    if (typeof window !== "undefined") {
+      const currentSeed = localStorage.getItem("cl_seed_version_v5");
+      if (!currentSeed) {
+        localStorage.setItem("cl_reports", JSON.stringify(DEFAULT_REPORTS));
+        localStorage.setItem("cl_seed_version_v5", "true");
+      }
+    }
     const reports = getStoredData<Report[]>("cl_reports", DEFAULT_REPORTS);
     return reports.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   },
